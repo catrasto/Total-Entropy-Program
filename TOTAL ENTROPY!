@@ -1,0 +1,293 @@
+import turtle
+import matplotlib.pyplot
+import numpy
+import math
+from scipy.optimize import curve_fit
+
+# Table Values for Shomate calculations 
+Temp = [50, 100, 150, 200, 273.15, 298.15, 300, 400, 500, 600, 700, 800, 900, 1000, 1100, 1200, 1300, 1400, 1500, 1750, 2000, 2250, 2500, 2750, 3000]
+Cpm = [45.01, 51.23, 55.45, 61.73, 74.89, 80.15, 80.55, 102.73, 123.64, 141.91, 157.66, 171.27, 183.06, 193.30, 202.18, 209.90, 216.59, 222.41, 227.48, 237.55, 244.85, 250.26, 254.33, 257.45, 259.87]
+
+Temp_array = numpy.array(Temp)
+Cpm_array = numpy.array(Cpm)
+
+# Shomate Function used for parameters
+def Shomate_Cp(temps, A, B, C, D, E):
+    return A + B*temps + C*(temps**2) + D*(temps**3) + (E/(temps**2))
+
+# Parameters
+params, covarsSho = curve_fit(Shomate_Cp, Temp_array, Cpm_array)
+
+A = params[0]
+B = params[1]
+C = params[2]
+D = params[3]
+E = params[4]
+
+# User Input Data for Temperature and Moles of 2-Butene(Z)
+TUser = float(input("At what temperature do you desire?   "))
+NUser = float(input("How many moles of the 2-Butene(Z) do you desire?   "))
+
+# Important Values
+TTrans = 276.9
+HVap = 23340
+CpL = 127
+
+# If TUser > TTrans: Integrated Heat Capacity using Shomate Equation
+CpG1 = (A*(TUser - TTrans)) + ((B/2)*((TUser**2) - (TTrans**2))) + ((C/3)*((TUser**3) - (TTrans**3))) + ((D/4)*((TUser**4) - (TTrans**4))) + ((E/TUser) - (E/TTrans))
+
+# If TUser > TTrans: All Calculations Using CpG1>
+DeltaSA1 = (CpL)*(numpy.log(TTrans/TUser))
+DeltaHA1 = (NUser)*(CpL)*(TTrans-TUser)
+
+DeltaSB1 = ((NUser)*(HVap)/TTrans)
+
+DeltaSC1 = (NUser)*(CpG1) *(numpy.log(TUser/TTrans))
+DeltaHC1 = (NUser)*(CpG1)*(TUser - TTrans)
+
+DeltaSSys1 = DeltaSA1 + DeltaSB1 + DeltaSC1
+DeltaHSys1 = DeltaHA1 + HVap + DeltaHC1
+
+DeltaSSurr1 = (-DeltaHSys1)/(TUser)
+DeltaHSurr1 = (-DeltaHSys1)
+
+DeltaSTotal1 = (DeltaSSys1) + (DeltaSSurr1)
+
+# If TUser < TTrans: Integrated Heat Capacity using Shomate Equation
+CpG2 = (A*(TTrans - TUser)) + ((B/2)*((TTrans**2) - (TUser**2))) + ((C/3)*((TTrans**3) - (TUser**3))) + ((D/4)*((TTrans**4) - (TUser**4))) + ((E/TTrans) - (E/TUser))
+
+# If TUser < TTrans: All Calculations Using CpG1>
+DeltaSA2 = (CpL)*(numpy.log(TUser/TTrans))
+DeltaHA2 = (NUser)*(CpL)*(TUser-TTrans)
+
+DeltaSB2 = ((NUser)*(HVap)/TUser)
+
+DeltaSC2 = (NUser)*(CpG2) *(numpy.log(TTrans/TUser))
+DeltaHC2 = (NUser)*(CpG2)*(TTrans - TUser)
+
+DeltaSSys2 = DeltaSA2 + DeltaSB2 + DeltaSC2
+DeltaHSys2 = DeltaHA2 + HVap + DeltaHC1
+
+DeltaSSurr2 = (-DeltaHSys2)/(TUser)
+DeltaHSurr2 = (-DeltaHSys2)
+
+DeltaSTotal2 = (DeltaSSys2) + (DeltaSSurr2)
+
+# If TUser = TTrans: All Calculations Using CpG1>
+DeltaSB3 = ((NUser)*(HVap)/TTrans)
+
+DeltaSSys3 = DeltaSB3
+DeltaHSys3 = HVap
+
+DeltaSSurr3 = (-DeltaHSys3)/(TUser)
+DeltaHSurr3 = (-DeltaHSys3)
+
+DeltaSTotal3 = (DeltaSSys3) + (DeltaSSurr3)
+
+# Turtle Graph Screen
+t = turtle.Turtle()
+t.speed(20)
+t.shape("turtle")
+t.lt(90)
+t.penup()
+t.goto(-200, 200)
+t.pendown() 
+t.goto(-200, -200)
+t.goto(200, -200)
+t.penup()
+
+# Turtle Temperature
+t.speed(2)
+t.goto(-70, -230)
+t.pendown()
+fontT = ('Helvetica', 20)
+t.write("Temperature (K)", font=fontT)
+t.penup()
+
+t.speed(3)
+t.goto(-100, -180)
+t.pendown()
+t.goto(-100, -220)
+t.penup()
+t.goto(100, -180)
+t.pendown()
+t.goto(100, -220)
+t.penup()
+
+fontT2 = ('Helvetica', 12)
+t.goto(-115, -240)
+if TTrans < TUser:
+    t.write('%0.2f K' %TTrans, font=fontT2)
+elif TTrans > TUser:
+    t.write('%0.2f K' %TUser, font=fontT2)
+else:
+    t.write('%0.2f K' %TTrans, font=fontT2)
+
+t.goto(85, -240)
+if TTrans > TUser:
+    t.write('%0.2f K' %TTrans, font=fontT2)
+elif TTrans < TUser:
+    t.write('%0.2f K' %TUser, font=fontT2)
+else:
+    t.write('Not Gonna Need It')
+
+# Turtle Volume
+t.goto(-275, -12)
+t.pendown()
+fontV = ('Helvetica', 20)
+t.write("Volume", font=fontV)
+t.penup()
+
+t.goto(-180, 100)
+t.pendown()
+t.goto(-220, 100)
+t.penup()
+t.goto(-180, -100)
+t.pendown()
+t.goto(-220, -100)
+t.penup()
+
+# Turtle User > TVap Entropy Box
+if TUser > TTrans:
+    fontHS = ('Helvetica', 8)
+
+    t.pensize(8)
+    t.color("red")
+    t.goto(100, -100)
+    t.pendown()
+    t.goto(-100, -100)
+    t.penup()
+    t.goto(-30, -120)
+    t.write('Delta H = %0.3f J' %DeltaHA1, font=fontHS)
+    t.goto(-30, -140)
+    t.write('Delta S = %0.3f J/K' %DeltaSA1, font=fontHS)
+    
+    t.goto(-100, -100)
+    t.pendown()
+    t.color("green")
+    t.goto(-100, 100)
+    t.penup()
+    t.goto(-180, 10)
+    t.write('Delta H = %0.3f J' %HVap, font=fontHS)
+    t.goto(-180, -10)
+    t.write('Delta S = %0.3f J/K' %DeltaSB1, font=fontHS)
+
+    t.goto(-100, 100)
+    t.pendown()
+    t.color("blue")
+    t.goto(100, 100)
+    t.penup()
+    t.goto(-30, 110)
+    t.write('Delta H = %0.3f J' %DeltaHC1, font=fontHS)
+    t.goto(-30, 130)
+    t.write('Delta S = %0.3f J/K' %DeltaSC1, font=fontHS)
+
+    t.goto(100, -100)
+    t.pendown()
+    t.color("purple")
+    t.goto(100, 100)
+    t.penup()
+    t.penup()
+    t.goto(110, 10)
+    t.write('Delta H System = %0.3f J' %DeltaHSys1, font=fontHS)
+    t.goto(110, -10)
+    t.write('Delta S System = %0.3f J/K' %DeltaSSys1, font=fontHS)
+
+    t.color('black')
+    t.goto(0, 50)
+    t.write('Delta H Surroundings = %0.3f J' %DeltaHSurr1, font=fontHS, align = 'center')
+    t.goto(0, -50)
+    t.write('Delta S Surroundings = %0.3f J/K' %DeltaSSurr1, font=fontHS, align = 'center')
+
+    t.goto(0, -70)
+    t.write('Delta S Total = %0.3f J/K' %DeltaSTotal1, font=fontHS, align = 'center')
+
+elif TUser < TTrans:
+    fontHS = ('Helvetica', 8)
+    
+    t.pensize(8)
+    t.color("red")
+    t.goto(-100, -100)
+    t.pendown()
+    t.goto(100, -100)
+    t.penup()
+    t.goto(-30, -120)
+    t.write('Delta H = %0.3f J' %DeltaHA2, font=fontHS)
+    t.goto(-30, -140)
+    t.write('Delta S = %0.3f J/K' %DeltaSA2, font=fontHS)
+    
+    t.goto(100, -100)
+    t.pendown()
+    t.color("purple")
+    t.goto(100, 100)
+    t.penup()
+    t.penup()
+    t.goto(110, 10)
+    t.write('Delta H = %0.3f J' %HVap, font=fontHS)
+    t.goto(110, -10)
+    t.write('Delta S = %0.3f J/K' %DeltaSB2, font=fontHS)
+
+    t.goto(100, 100)
+    t.pendown()
+    t.color("blue")
+    t.goto(-100, 100)
+    t.penup()
+    t.goto(-30, 110)
+    t.write('Delta H = %0.3f J' %DeltaHC2, font=fontHS)
+    t.goto(-30, 130)
+    t.write('Delta S = %0.3f J/K' %DeltaSC2, font=fontHS)
+
+    t.goto(-100, -100)
+    t.pendown()
+    t.color("green")
+    t.goto(-100, 100)
+    t.penup()
+    t.goto(-180, 18)
+    t.write('Delta H System')
+    t.goto(-180, 10)
+    t.write('= %0.3f J' %DeltaHSys2, font=fontHS)
+    t.goto(-180, -10)
+    t.write('Delta S System')
+    t.goto(-180, -18)
+    t.write('= %0.3f J/K' %DeltaSSys2, font=fontHS)
+
+    t.color('black')
+    t.goto(0, 50)
+    t.write('Delta H Surroundings = %0.3f J' %DeltaHSurr2, font=fontHS, align = 'center')
+    t.goto(0, -50)
+    t.write('Delta S Surroundings = %0.3f J/K' %DeltaSSurr2, font=fontHS, align = 'center')
+
+    t.goto(0, -70)
+    t.write('Delta S Total = %0.3f J/K' %DeltaSTotal2, font=fontHS, align = 'center')
+
+else:
+    fontHS = ('Helvetica', 8)
+
+    t.goto(-100, -100)
+    t.pendown()
+    t.color("green")
+    t.goto(-100, 100)
+    t.penup()
+    t.goto(-180, 10)
+    t.write('Delta H = %0.3f J' %HVap, font=fontHS)
+    t.goto(-180, -10)
+    t.write('Delta S = %0.3f J/K' %DeltaSB3, font=fontHS)
+
+    t.color('black')
+    t.goto(0, 50)
+    t.write('Delta H Surroundings = %0.3f J' %DeltaHSurr3, font=fontHS, align = 'center')
+    t.goto(0, -50)
+    t.write('Delta S Surroundings = %0.3f J/K' %DeltaSSurr3, font=fontHS, align = 'center')
+
+    t.goto(0, -70)
+    t.write('Delta S Total = %0.3f J/K' %DeltaSTotal3, font=fontHS, align = 'center')
+
+t.home()
+
+# Lil Dancy Dance
+t.color('black')
+t.lt(180)
+t.rt(90)
+t.lt(360)
+t.rt(360)
+turtle.done()
